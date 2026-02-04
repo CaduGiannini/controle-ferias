@@ -1,6 +1,6 @@
 import xlsx from "xlsx";
-import path from "path";
 import fs from "fs";
+import path from "path";
 
 export default function handler(req, res) {
   try {
@@ -17,7 +17,5 @@ export default function handler(req, res) {
     const dados = xlsx.utils.sheet_to_json(sheet);
 
     res.status(200).json(dados);
-  } catch (erro) {
-    res.status(500).json({ erro: erro.message });
-  }
-}
+  } catch (error) {
+    res.status(500).json({ erro: error.messag
