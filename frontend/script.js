@@ -67,5 +67,53 @@ async function pintarFerias() {
     });
   });
 }
+document.getElementById("formFerias").onsubmit = async (e) => {
+  e.preventDefault();
 
-renderCalendario();
+  const inicio = document.getElementById("inicio").value;
+  const hojeISO = new Date().toISOString().split("T")[0];
+
+  if (inicio < hojeISO) {
+    alert("Não é permitido marcar férias no passado");
+    return;
+  }
+
+  await fetch("/api/ferias", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nome: document.getElementById("nome").value,
+      cargo: document.getElementById("cargo").value,
+      inicio,
+      fim: document.getElementById("fim").value
+    })
+  });
+
+document.getElementById("formFerias").onsubmit = async (e) => {
+  e.preventDefault();
+
+  const inicio = document.getElementById("inicio").value;
+  const hojeISO = new Date().toISOString().split("T")[0];
+
+  if (inicio < hojeISO) {
+    alert("Não é permitido marcar férias no passado");
+    return;
+  }
+
+  await fetch("/api/ferias", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nome: document.getElementById("nome").value,
+      cargo: document.getElementById("cargo").value,
+      inicio,
+      fim: document.getElementById("fim").value
+    })
+  });
+
+  renderCalendario();
+  e.target.reset();
+};
+
+
+
