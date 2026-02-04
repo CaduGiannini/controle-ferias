@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de Férias</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .calendario {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      max-width: 700px;
+    }
+
+    .dia {
+      border: 1px solid #ccc;
+      min-height: 70px;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    .analista { background: #cce5ff; }
+    .ap3 { background: #d4edda; }
+    .coordenacao { background: #f8d7da; }
+
+    .titulo {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calendário de Férias</h1>
+
+  <div class="calendario" id="calendario"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
 
