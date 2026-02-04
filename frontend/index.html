@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Calendário de Férias</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -11,7 +11,7 @@
 
 <div class="controls">
   <button id="prev">◀</button>
-  <h2 id="mesAno"></h2>
+  <span id="monthYear"></span>
   <button id="next">▶</button>
 </div>
 
@@ -20,17 +20,22 @@
 <h2>Marcar Férias</h2>
 
 <form id="form">
-  <input placeholder="Nome" id="nome" required />
-  <select id="cargo">
-    <option>Analista</option>
-    <option>Coordenador</option>
-    <option>Gerente</option>
+  <input placeholder="Nome" id="nome" required>
+
+  <select id="cargo" required>
+    <option value="">Cargo</option>
+    <option value="AP1">AP1</option>
+    <option value="AP2">AP2</option>
+    <option value="Analista">Analista</option>
+    <option value="Coordenação">Coordenação</option>
   </select>
-  <input type="date" id="inicio" required />
-  <input type="date" id="fim" required />
+
+  <input type="date" id="inicio" required>
+  <input type="date" id="fim" required>
+
   <button>Salvar</button>
 </form>
 
-<script src="script.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
