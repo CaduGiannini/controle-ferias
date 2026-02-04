@@ -1,76 +1,36 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Controle de Férias</title>
-
-  <style>
-    body { font-family: Arial; padding: 20px; }
-
-    .topo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    button { padding: 5px 10px; cursor: pointer; }
-
-    .calendario {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      max-width: 700px;
-      margin-bottom: 20px;
-    }
-
-    .dia {
-      border: 1px solid #ccc;
-      min-height: 70px;
-      padding: 5px;
-      font-size: 12px;
-    }
-
-    .titulo { background: #eee; font-weight: bold; }
-
-    .Analista { background: #cce5ff; }
-    .AP3 { background: #d4edda; }
-    .Coordenacao { background: #f8d7da; }
-
-    form {
-      max-width: 400px;
-      display: grid;
-      gap: 10px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Calendário de Férias</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <h1>Calendário de Férias</h1>
 
-<div class="topo">
+<div class="controls">
   <button id="prev">◀</button>
-  <strong id="mesAno"></strong>
+  <h2 id="mesAno"></h2>
   <button id="next">▶</button>
 </div>
 
-<div class="calendario" id="calendario"></div>
+<div id="calendar"></div>
 
 <h2>Marcar Férias</h2>
 
-<form id="formFerias">
-  <input id="nome" placeholder="Nome" required>
-  <select id="cargo" required>
-    <option value="">Cargo</option>
+<form id="form">
+  <input placeholder="Nome" id="nome" required />
+  <select id="cargo">
     <option>Analista</option>
-    <option>AP3</option>
-    <option>Coordenacao</option>
+    <option>Coordenador</option>
+    <option>Gerente</option>
   </select>
-  <input id="inicio" type="date" required>
-  <input id="fim" type="date" required>
-  <button type="submit">Salvar</button>
+  <input type="date" id="inicio" required />
+  <input type="date" id="fim" required />
+  <button>Salvar</button>
 </form>
 
-<script src="/frontend/script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
