@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Controle de Férias</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
+    body { font-family: Arial; padding: 20px; }
 
-    h1 {
+    .topo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
     }
+
+    button { padding: 5px 10px; cursor: pointer; }
 
     .calendario {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 5px;
       max-width: 700px;
+      margin-bottom: 20px;
     }
 
     .dia {
@@ -28,13 +31,16 @@
       font-size: 12px;
     }
 
+    .titulo { background: #eee; font-weight: bold; }
+
     .Analista { background: #cce5ff; }
     .AP3 { background: #d4edda; }
     .Coordenacao { background: #f8d7da; }
 
-    .titulo {
-      font-weight: bold;
-      background: #eee;
+    form {
+      max-width: 400px;
+      display: grid;
+      gap: 10px;
     }
   </style>
 </head>
@@ -42,8 +48,29 @@
 
 <h1>Calendário de Férias</h1>
 
+<div class="topo">
+  <button id="prev">◀</button>
+  <strong id="mesAno"></strong>
+  <button id="next">▶</button>
+</div>
+
 <div class="calendario" id="calendario"></div>
 
-<script src="script.js"></script>
+<h2>Marcar Férias</h2>
+
+<form id="formFerias">
+  <input id="nome" placeholder="Nome" required>
+  <select id="cargo" required>
+    <option value="">Cargo</option>
+    <option>Analista</option>
+    <option>AP3</option>
+    <option>Coordenacao</option>
+  </select>
+  <input id="inicio" type="date" required>
+  <input id="fim" type="date" required>
+  <button type="submit">Salvar</button>
+</form>
+
+<script src="/frontend/script.js"></script>
 </body>
 </html>
