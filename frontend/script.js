@@ -1,22 +1,20 @@
-const calendario = document.getElementById("calendario");
+const cal = document.getElementById("cal");
 
-// gerar janeiro simples (exemplo)
-function criarCalendario() {
-  const diasSemana = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
-
-  diasSemana.forEach(d => {
-    const div = document.createElement("div");
-    div.className = "dia titulo";
-    div.innerText = d;
-    calendario.appendChild(div);
-  });
-
-  for (let dia = 1; dia <= 31; dia++) {
-    const div = document.createElement("div");
-    div.className = "dia";
-    div.innerText = dia;
-    calendario.appendChild(div);
+function criarDias() {
+  for (let i = 1; i <= 31; i++) {
+    const d = document.createElement("div");
+    d.className = "dia";
+    d.innerText = i;
+    cal.appendChild(d);
   }
 }
 
-criarCalendario();
+async function carregarFerias() {
+  const res = await fetch("/api/ferias");
+  const ferias = await res.json();
+
+  console.log("Férias:", ferias);
+}
+
+criarDias();
+carregarFerias();
