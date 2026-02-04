@@ -1,1 +1,33 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin: 20px 0;
+}
+
+.day {
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 80px;
+}
+
+.Analista { background: #a3d5ff; }
+.Coordenador { background: #baffc9; }
+.Gerente { background: #ffb3ba; }
+
+form {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
