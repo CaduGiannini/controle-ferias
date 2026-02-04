@@ -5,29 +5,31 @@ body {
 
 .controls {
   display: flex;
-  align-items: center;
   gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 #calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
-  margin: 20px 0;
+  margin-bottom: 30px;
 }
 
 .day {
-  border: 1px solid #ccc;
-  padding: 10px;
-  min-height: 80px;
+  border: 1px solid #ddd;
+  height: 80px;
+  padding: 5px;
+  font-size: 12px;
 }
 
-.Analista { background: #a3d5ff; }
-.Coordenador { background: #baffc9; }
-.Gerente { background: #ffb3ba; }
-
-form {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
+.day.disabled {
+  background: #f5f5f5;
+  color: #aaa;
 }
+
+.AP1 { background: #ffadad; }
+.AP2 { background: #ffd6a5; }
+.Analista { background: #caffbf; }
+.Coordenação { background: #9bf6ff; }
