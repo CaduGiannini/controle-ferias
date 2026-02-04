@@ -1,20 +1,43 @@
-const cal = document.getElementById("cal");
+const calendario = document.getElementById("calendario");
 
-function criarDias() {
-  for (let i = 1; i <= 31; i++) {
-    const d = document.createElement("div");
-    d.className = "dia";
-    d.innerText = i;
-    cal.appendChild(d);
+const diasSemana = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+
+function criarCalendario() {
+  calendario.innerHTML = "";
+
+  diasSemana.forEach(dia => {
+    const div = document.createElement("div");
+    div.className = "dia titulo";
+    div.innerText = dia;
+    calendario.appendChild(div);
+  });
+
+  for (let dia = 1; dia <= 31; dia++) {
+    const div = document.createElement("div");
+    div.className = "dia";
+    div.innerText = dia;
+    div.dataset.dia = dia;
+    calendario.appendChild(div);
   }
 }
 
 async function carregarFerias() {
-  const res = await fetch("/api/ferias");
-  const ferias = await res.json();
+  const response = await fetch("/api/ferias");
+  const ferias = await response.json();
 
-  console.log("Férias:", ferias);
+  ferias.forEach(item => {
+    const inicio = new Date(item.Inicio);
+    const fim = new Date(item.Fim);
+
+    for (let d = inicio.getDate(); d <= fim.getDate(); d++) {
+      const celula = document.querySelector(`[data-dia="${d}"]`);
+      if (celula) {
+        celula.classList.add(item.Cargo);
+        celula.innerHTML += `<br>${item.Nome}`;
+      }
+    }
+  });
 }
 
-criarDias();
+criarCalendario();
 carregarFerias();
