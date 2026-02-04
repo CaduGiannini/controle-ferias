@@ -6,16 +6,12 @@ export default function handler(req, res) {
   try {
     const filePath = path.join(process.cwd(), "data", "banco-ferias.xlsx");
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(500).json({ erro: "Arquivo Excel não encontrado" });
-    }
-
     const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const dados = xlsx.utils.sheet_to_json(sheet);
 
     res.status(200).json(dados);
-  } catch (error) {
-    res.status(500).json({ erro: error.messag
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+}
