@@ -1,91 +1,52 @@
-const calendar = document.getElementById("calendar");
-const monthYear = document.getElementById("monthYear");
+const XLSX = require('xlsx');
+const path = require('path');
+const fs = require('fs');
 
-let date = new Date();
+const FILE_PATH = path.join(process.cwd(), 'data', 'banco-ferias.xlsx');
 
-const cargoClass = {
-  "AP1": "AP1",
-  "AP2": "AP2",
-  "Analista": "Analista",
-  "Coordenação": "Coordenação"
+// Helper para ler o Excel
+const readExcel = () => {
+    if (!fs.existsSync(FILE_PATH)) return [];
+    const workbook = XLSX.readFile(FILE_PATH);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet);
 };
 
-async function load() {
-  const res = await fetch("/api/ferias");
-  const ferias = await res.json();
-  renderCalendar(ferias);
-}
+// Helper para escrever no Excel
+const writeExcel = (data) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Ferias");
+    XLSX.writeFile(wb, FILE_PATH);
+};
 
-function renderCalendar(ferias) {
-  calendar.innerHTML = "";
-  const year = date.getFullYear();
-  const month = date.getMonth();
+export default function handler(req, res) {
+    const { method } = req;
+    let data = readExcel();
 
-  monthYear.textContent = date.toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric"
-  });
+    switch (method) {
+        case 'GET':
+            return res.status(200).json(data);
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const days = new Date(year, month + 1, 0).getDate();
+        case 'POST':
+            const nova = req.body;
+            // Validação de Data
+            if (new Date(nova.inicio) < new Date().setHours(0,0,0,0)) {
+                return res.status(400).json({ error: "Data retroativa não permitida." });
+            }
+            nova.id = data.length > 0 ? Math.max(...data.map(f => f.id)) + 1 : 1;
+            data.push(nova);
+            writeExcel(data);
+            return res.status(201).json(nova);
 
-  for (let i = 0; i < firstDay; i++) {
-    calendar.appendChild(document.createElement("div"));
-  }
+        case 'DELETE':
+            const { id } = req.query;
+            data = data.filter(f => f.id != id);
+            writeExcel(data);
+            return res.status(200).json({ message: "Excluído" });
 
-  for (let d = 1; d <= days; d++) {
-    const dayEl = document.createElement("div");
-    dayEl.className = "day";
-
-    const current = new Date(year, month, d);
-    if (current < new Date().setHours(0,0,0,0)) {
-      dayEl.classList.add("disabled");
+        default:
+            res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+            res.status(405).end(`Method ${method} Not Allowed`);
     }
-
-    ferias.forEach(f => {
-      if (current >= new Date(f.inicio) && current <= new Date(f.fim)) {
-        dayEl.classList.add(cargoClass[f.cargo]);
-        dayEl.innerHTML = `<strong>${d}</strong><br>${f.nome}`;
-      }
-    });
-
-    if (!dayEl.innerHTML) dayEl.textContent = d;
-    calendar.appendChild(dayEl);
-  }
 }
-
-document.getElementById("prev").onclick = () => {
-  date.setMonth(date.getMonth() - 1);
-  load();
-};
-
-document.getElementById("next").onclick = () => {
-  date.setMonth(date.getMonth() + 1);
-  load();
-};
-
-document.getElementById("form").onsubmit = async e => {
-  e.preventDefault();
-
-  const inicio = document.getElementById("inicio").value;
-  if (new Date(inicio) < new Date().setHours(0,0,0,0)) {
-    alert("Não é permitido marcar férias no passado");
-    return;
-  }
-
-  await fetch("/api/ferias", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nome: nome.value,
-      cargo: cargo.value,
-      inicio,
-      fim: fim.value
-    })
-  });
-
-  e.target.reset();
-  load();
-};
-
-load();
