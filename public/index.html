@@ -2,60 +2,57 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Férias | Corporate</title>
+    <title>Sistema de Férias | Corporativo</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <div class="app-grid">
         <aside class="sidebar">
-            <h2>Marcar Férias</h2>
-            <form id="feriasForm">
-                <div class="field">
-                    <label>Colaborador</label>
-                    <input type="text" id="nome" required placeholder="Nome completo">
+            <h1 class="logo">Férias<span>App</span></h1>
+            <form id="formFerias" class="card-form">
+                <h3>Agendar Férias</h3>
+                <div class="input-group">
+                    <label>Nome do Colaborador</label>
+                    <input type="text" id="nome" placeholder="Ex: João Silva" required>
                 </div>
-                <div class="field">
+                <div class="input-group">
                     <label>Cargo</label>
                     <select id="cargo" required>
-                        <option value="Dev">Desenvolvedor</option>
+                        <option value="Desenvolvedor">Desenvolvedor</option>
                         <option value="Design">Designer</option>
-                        <option value="Manager">Gerente</option>
+                        <option value="Gerente">Gerente</option>
                         <option value="RH">RH</option>
                     </select>
                 </div>
-                <div class="grid-inputs">
-                    <div class="field">
+                <div class="input-row">
+                    <div class="input-group">
                         <label>Início</label>
                         <input type="date" id="inicio" required>
                     </div>
-                    <div class="field">
+                    <div class="input-group">
                         <label>Fim</label>
                         <input type="date" id="fim" required>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary">Salvar Agendamento</button>
+                <button type="submit" id="btnSalvar">Salvar na Planilha</button>
             </form>
-            <div class="legenda">
-                <p><strong>Legenda:</strong></p>
-                <ul>
-                    <li><span class="dot dev"></span> Dev</li>
-                    <li><span class="dot design"></span> Design</li>
-                    <li><span class="dot manager"></span> Manager</li>
-                    <li><span class="dot rh"></span> RH</li>
-                </ul>
+            
+            <div class="legenda-card">
+                <h4>Legenda por Cargo</h4>
+                <div class="legenda-item"><span class="dot dev"></span> Desenvolvedor</div>
+                <div class="legenda-item"><span class="dot design"></span> Designer</div>
+                <div class="legenda-item"><span class="dot gerente"></span> Gerente</div>
+                <div class="legenda-item"><span class="dot rh"></span> RH</div>
             </div>
         </aside>
 
-        <main class="calendar-container">
-            <header class="calendar-header">
-                <button id="prevMonth">←</button>
-                <h1 id="monthDisplay">Janeiro 2024</h1>
-                <button id="nextMonth">→</button>
+        <main class="content">
+            <header class="calendar-nav">
+                <button onclick="mudarMes(-1)">❮ Anterior</button>
+                <h2 id="mesAtual">Janeiro 2024</h2>
+                <button onclick="mudarMes(1)">Próximo ❯</button>
             </header>
-            <div class="calendar-grid" id="calendarGrid">
-                </div>
+            <div class="calendar-grid" id="calendar"></div>
         </main>
     </div>
     <script src="script.js"></script>
