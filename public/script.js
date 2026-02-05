@@ -1,59 +1,12 @@
-let currentDate = new Date();
-let feriasData = [];
-
-async function fetchFerias() {
-    const res = await fetch('/api/ferias');
-    feriasData = await res.json();
-    renderCalendar();
-}
-
-function renderCalendar() {
-    const grid = document.getElementById('calendarGrid');
-    const monthDisplay = document.getElementById('monthDisplay');
-    grid.innerHTML = '';
-
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    monthDisplay.innerText = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentDate);
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // Espaços vazios
-    for (let i = 0; i < firstDay; i++) {
-        const empty = document.createElement('div');
-        empty.className = 'day-cell';
-        grid.appendChild(empty);
-    }
-
-    // Dias do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        cell.innerHTML = `<span class="day-number">${day}</span>`;
-
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        
-        // Filtrar férias que caem neste dia
-        const feriasNoDia = feriasData.filter(f => {
-            return dateStr >= f.inicio && dateStr <= f.fim;
-        });
-
-        feriasNoDia.forEach(f => {
-            const tag = document.createElement('div');
-            tag.className = `vacation-tag ${f.cargo.toLowerCase()}`;
-            tag.innerText = f.nome;
-            tag.title = `${f.nome} (${f.cargo})`;
-            cell.appendChild(tag);
-        });
-
-        grid.appendChild(cell);
-    }
-}
+// ... (mantenha o restante das funções de navegação)
 
 document.getElementById('feriasForm').onsubmit = async (e) => {
     e.preventDefault();
+    
+    const btn = e.target.querySelector('button');
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+
     const payload = {
         nome: document.getElementById('nome').value,
         cargo: document.getElementById('cargo').value,
@@ -61,22 +14,26 @@ document.getElementById('feriasForm').onsubmit = async (e) => {
         fim: document.getElementById('fim').value
     };
 
-    const res = await fetch('/api/ferias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const res = await fetch('/api/ferias', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (res.ok) {
-        alert('Férias agendadas!');
-        fetchFerias();
-    } else {
-        const err = await res.json();
-        alert(err.error);
+        const result = await res.json();
+
+        if (res.ok) {
+            alert('Férias agendadas com sucesso!');
+            e.target.reset(); // Limpa o formulário
+            await fetchFerias(); // Recarrega os dados e renderiza o calendário
+        } else {
+            alert('Erro: ' + result.error);
+        }
+    } catch (err) {
+        alert('Erro de conexão com o servidor.');
+    } finally {
+        btn.innerText = 'Salvar Agendamento';
+        btn.disabled = false;
     }
 };
-
-document.getElementById('prevMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
-document.getElementById('nextMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
-
-fetchFerias();
