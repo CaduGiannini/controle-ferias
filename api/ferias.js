@@ -1,67 +1,46 @@
-const XLSX = require('xlsx');
-const path = require('path');
-const fs = require('fs');
+const axios = require('axios');
 
-// No Vercel, o único lugar com permissão de escrita é o /tmp
-const FILE_PATH = path.join('/tmp', 'banco-ferias.xlsx');
-const INITIAL_FILE = path.join(process.cwd(), 'data', 'banco-ferias.xlsx');
+const { GITHUB_TOKEN, REPO_OWNER, REPO_NAME, POWER_AUTOMATE_URL } = process.env;
+const FILE_PATH = 'data/banco-ferias.json';
 
-// Helper: Garante que o arquivo exista (copia do inicial para o /tmp se necessário)
-const initExcel = () => {
-    if (!fs.existsSync(FILE_PATH)) {
-        if (fs.existsSync(INITIAL_FILE)) {
-            fs.copyFileSync(INITIAL_FILE, FILE_PATH);
-        } else {
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet([]);
-            XLSX.utils.book_append_sheet(wb, ws, "Ferias");
-            XLSX.writeFile(wb, FILE_PATH);
-        }
-    }
-};
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).send('Apenas POST permitido');
 
-export default function handler(req, res) {
-    initExcel();
-    const { method } = req;
+    const novaFerias = { ...req.body, id: Date.now() };
 
     try {
-        const workbook = XLSX.readFile(FILE_PATH);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        let data = XLSX.utils.sheet_to_json(sheet);
+        // --- PARTE 1: PERSISTÊNCIA NO GITHUB ---
+        const ghUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        
+        let sha;
+        let content = [];
+        
+        try {
+            const { data } = await axios.get(ghUrl, { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
+            sha = data.sha;
+            content = JSON.parse(Buffer.from(data.content, 'base64').toString());
+        } catch (e) { /* Arquivo novo */ }
 
-        switch (method) {
-            case 'GET':
-                return res.status(200).json(data);
+        content.push(novaFerias);
+        const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
 
-            case 'POST':
-                const nova = req.body;
-                nova.id = Date.now(); // ID único
-                data.push(nova);
-                
-                const newWs = XLSX.utils.json_to_sheet(data);
-                const newWb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(newWb, newWs, "Ferias");
-                XLSX.writeFile(newWb, FILE_PATH);
-                
-                return res.status(201).json(nova);
+        await axios.put(ghUrl, {
+            message: `Agendamento: ${novaFerias.nome}`,
+            content: updatedContent,
+            sha: sha
+        }, { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
 
-            case 'DELETE':
-                const { id } = req.query;
-                data = data.filter(item => item.id != id);
-                
-                const delWs = XLSX.utils.json_to_sheet(data);
-                const delWb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(delWb, delWs, "Ferias");
-                XLSX.writeFile(delWb, FILE_PATH);
-                
-                return res.status(200).json({ message: "Excluído com sucesso" });
 
-            default:
-                res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
-                return res.status(405).end(`Method ${method} Not Allowed`);
+        // --- PARTE 2: SINCRONIZAÇÃO COM EXCEL (OFFICE 365) ---
+        // Enviamos para um Flow do Power Automate que insere no Excel do OneDrive
+        if (POWER_AUTOMATE_URL) {
+            await axios.post(POWER_AUTOMATE_URL, novaFerias);
         }
+
+        return res.status(201).json({ success: true, message: "Sincronizado em ambas bases!" });
+
     } catch (error) {
-        return res.status(500).json({ error: "Erro ao processar Excel: " + error.message });
+        console.error(error);
+        res.status(500).json({ error: "Falha na sincronização" });
     }
 }
