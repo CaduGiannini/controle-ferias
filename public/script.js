@@ -1,85 +1,82 @@
-const calendar = document.getElementById("calendar");
-const mesAno = document.getElementById("mesAno");
-let dataAtual = new Date();
+let currentDate = new Date();
+let feriasData = [];
 
-const cores = {
-  Analista: "Analista",
-  Coordenador: "Coordenador",
-  Gerente: "Gerente"
-};
-
-async function carregarFerias() {
-  const res = await fetch("/api/ferias");
-  return res.json();
+async function fetchFerias() {
+    const res = await fetch('/api/ferias');
+    feriasData = await res.json();
+    renderCalendar();
 }
 
-function renderCalendar(ferias) {
-  calendar.innerHTML = "";
-  const ano = dataAtual.getFullYear();
-  const mes = dataAtual.getMonth();
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const monthDisplay = document.getElementById('monthDisplay');
+    grid.innerHTML = '';
 
-  mesAno.innerText = dataAtual.toLocaleString("pt-br", { month: "long", year: "numeric" });
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    monthDisplay.innerText = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentDate);
 
-  const primeiroDia = new Date(ano, mes, 1).getDay();
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  for (let i = 0; i < primeiroDia; i++) {
-    calendar.innerHTML += "<div></div>";
-  }
+    // Espaços vazios
+    for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'day-cell';
+        grid.appendChild(empty);
+    }
 
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const dataStr = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-    const cell = document.createElement("div");
-    cell.className = "day";
-    cell.innerHTML = `<strong>${dia}</strong>`;
+    // Dias do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        cell.innerHTML = `<span class="day-number">${day}</span>`;
 
-    ferias.forEach(f => {
-      if (dataStr >= f.inicio && dataStr <= f.fim) {
-        cell.classList.add(cores[f.cargo]);
-        cell.innerHTML += `<div>${f.nome}</div>`;
-      }
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        // Filtrar férias que caem neste dia
+        const feriasNoDia = feriasData.filter(f => {
+            return dateStr >= f.inicio && dateStr <= f.fim;
+        });
+
+        feriasNoDia.forEach(f => {
+            const tag = document.createElement('div');
+            tag.className = `vacation-tag ${f.cargo.toLowerCase()}`;
+            tag.innerText = f.nome;
+            tag.title = `${f.nome} (${f.cargo})`;
+            cell.appendChild(tag);
+        });
+
+        grid.appendChild(cell);
+    }
+}
+
+document.getElementById('feriasForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const payload = {
+        nome: document.getElementById('nome').value,
+        cargo: document.getElementById('cargo').value,
+        inicio: document.getElementById('inicio').value,
+        fim: document.getElementById('fim').value
+    };
+
+    const res = await fetch('/api/ferias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     });
 
-    calendar.appendChild(cell);
-  }
-}
-
-async function atualizar() {
-  const ferias = await carregarFerias();
-  renderCalendar(ferias);
-}
-
-document.getElementById("prev").onclick = () => {
-  dataAtual.setMonth(dataAtual.getMonth() - 1);
-  atualizar();
+    if (res.ok) {
+        alert('Férias agendadas!');
+        fetchFerias();
+    } else {
+        const err = await res.json();
+        alert(err.error);
+    }
 };
 
-document.getElementById("next").onclick = () => {
-  dataAtual.setMonth(dataAtual.getMonth() + 1);
-  atualizar();
-};
+document.getElementById('prevMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
+document.getElementById('nextMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
 
-document.getElementById("form").onsubmit = async e => {
-  e.preventDefault();
-
-  const inicio = document.getElementById("inicio").value;
-  if (inicio < new Date().toISOString().split("T")[0]) {
-    alert("Não é permitido marcar férias no passado");
-    return;
-  }
-
-  await fetch("/api/ferias", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nome: nome.value,
-      cargo: cargo.value,
-      inicio,
-      fim: fim.value
-    })
-  });
-
-  atualizar();
-};
-
-atualizar();
+fetchFerias();
