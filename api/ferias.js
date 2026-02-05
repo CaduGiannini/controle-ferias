@@ -2,71 +2,66 @@ const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 
-// Garante o caminho absoluto independente de onde o processo inicia
-const FILE_PATH = path.join(process.cwd(), 'data', 'banco-ferias.xlsx');
+// No Vercel, o único lugar com permissão de escrita é o /tmp
+const FILE_PATH = path.join('/tmp', 'banco-ferias.xlsx');
+const INITIAL_FILE = path.join(process.cwd(), 'data', 'banco-ferias.xlsx');
 
-const readExcel = () => {
-    try {
-        if (!fs.existsSync(FILE_PATH)) return [];
-        const workbook = XLSX.readFile(FILE_PATH);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        return XLSX.utils.sheet_to_json(sheet);
-    } catch (e) {
-        console.error("Erro na leitura:", e);
-        return [];
-    }
-};
-
-const writeExcel = (data) => {
-    try {
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Ferias");
-        
-        // Verifica se a pasta data existe, se não, cria
-        const dir = path.dirname(FILE_PATH);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        
-        XLSX.writeFile(wb, FILE_PATH);
-        return true;
-    } catch (e) {
-        console.error("Erro na escrita:", e);
-        return false;
+// Helper: Garante que o arquivo exista (copia do inicial para o /tmp se necessário)
+const initExcel = () => {
+    if (!fs.existsSync(FILE_PATH)) {
+        if (fs.existsSync(INITIAL_FILE)) {
+            fs.copyFileSync(INITIAL_FILE, FILE_PATH);
+        } else {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet([]);
+            XLSX.utils.book_append_sheet(wb, ws, "Ferias");
+            XLSX.writeFile(wb, FILE_PATH);
+        }
     }
 };
 
 export default function handler(req, res) {
-    // Importante para o Vercel aceitar JSON no body
+    initExcel();
     const { method } = req;
-    let data = readExcel();
 
-    if (method === 'GET') {
-        return res.status(200).json(data);
-    } 
+    try {
+        const workbook = XLSX.readFile(FILE_PATH);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        let data = XLSX.utils.sheet_to_json(sheet);
 
-    if (method === 'POST') {
-        const novaFerias = req.body;
+        switch (method) {
+            case 'GET':
+                return res.status(200).json(data);
 
-        // Validação de Datas
-        const hoje = new Date().toISOString().split('T')[0];
-        if (novaFerias.inicio < hoje) {
-            return res.status(400).json({ error: "Não é possível marcar férias retroativas." });
+            case 'POST':
+                const nova = req.body;
+                nova.id = Date.now(); // ID único
+                data.push(nova);
+                
+                const newWs = XLSX.utils.json_to_sheet(data);
+                const newWb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(newWb, newWs, "Ferias");
+                XLSX.writeFile(newWb, FILE_PATH);
+                
+                return res.status(201).json(nova);
+
+            case 'DELETE':
+                const { id } = req.query;
+                data = data.filter(item => item.id != id);
+                
+                const delWs = XLSX.utils.json_to_sheet(data);
+                const delWb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(delWb, delWs, "Ferias");
+                XLSX.writeFile(delWb, FILE_PATH);
+                
+                return res.status(200).json({ message: "Excluído com sucesso" });
+
+            default:
+                res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+                return res.status(405).end(`Method ${method} Not Allowed`);
         }
-        if (novaFerias.fim < novaFerias.inicio) {
-            return res.status(400).json({ error: "Data de fim deve ser posterior ao início." });
-        }
-
-        novaFerias.id = Date.now(); // ID único baseado em timestamp
-        data.push(novaFerias);
-        
-        const sucesso = writeExcel(data);
-        if (sucesso) {
-            return res.status(201).json(novaFerias);
-        } else {
-            return res.status(500).json({ error: "Erro ao salvar no Excel." });
-        }
+    } catch (error) {
+        return res.status(500).json({ error: "Erro ao processar Excel: " + error.message });
     }
-
-    res.status(405).json({ error: "Método não permitido" });
 }
