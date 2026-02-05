@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/ferias.js" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
-}
